@@ -2,6 +2,7 @@ Title Ativ5.2
 .Model SMALL
 .stack 100h
 .DATA
+
 .CODE
  main proc
 

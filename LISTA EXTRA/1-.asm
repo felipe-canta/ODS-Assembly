@@ -3,9 +3,9 @@ Title Ativ3
 .stack 100h
 .DATA
  msg1 db 10,13, 'Digite um nome de ate 20 caracteres: $'
- msg2 db 10, 13, 'o nome eh: $'
+ msg2 db 10, 13, 'a quantidade de "a" contidos nesse nome eh: $'
  vetor db 20 dup(0)
- contador db 0
+ letraa db 0
 .CODE
  main proc
  mov ax,@DATA
@@ -22,27 +22,33 @@ Title Ativ3
  mov ah, 1
  int 21h
  cmp al, 0Dh
- JE msgescrever
+ JE msg
  mov vetor[bx],al
- inc bx
- inc contador
- loop ler
+ inc bx 
+ dec cx
+ cmp al, 'a'
+ JE adci
+ cmp al, 'A'
+ JE adci
+jmp verificar
 
-msgescrever:
-mov cl, contador 
-xor bx, bx
+ adci:
+ inc letraa
 
+ Verificar:
+cmp cx, 0
+JNZ ler
+
+ msg:
 mov ah, 9
  mov dx, offset msg2
  int 21h
 
-escrever:
-mov dl, vetor[bx]
-inc BX
+ escrever:
+ add letraa, '0'
+mov dl, letraa
 mov ah, 2
 int 21h
-dec cl
-jnz escrever
 
 mov ah, 4Ch
 main endp

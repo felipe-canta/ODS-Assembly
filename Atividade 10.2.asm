@@ -19,7 +19,7 @@ matriz db 0,0,0,0            ; cria matriz 4x4
        db 0,0,0,0
        db 0,0,0,0
 soma db 0                    ; variável pra guardar a soma dos valores
-
+contador db 0
 .CODE
 main proc
     ; inicializa o segmento de dados
@@ -61,9 +61,8 @@ lelinha:
     add bx, 4       ; avança pra próxima coluna
     xor si, si      ; reseta o índice de linha
     dec ch          ; decrementa o contador de colunas
+    pula_linha
     jnz lercoluna   ; se ainda tem coluna, continua lendo
-
-    pula_linha      ; pula linha macro
     ret             ; volta pro main
     
 ler ENDP
@@ -79,9 +78,9 @@ imprimecoluna:
 
 escrevelinha:
     mov dl, matriz[si+bx] ; pega o valor da matriz
-    add soma, dl          ; adiciona o valor pra soma
+           ; adiciona o valor pra soma
     or dl, 30h            ; transforma em ASCII
-
+add soma, dl   
     mov ah, 2            
     int 21h               ; exibe o caractere
 
@@ -99,24 +98,27 @@ escrevelinha:
 imprimir endp
 
 somar PROC
-    ; calcula e exibe a soma dos valores da matriz 
-    xor bh, bh            ; zera bh
-    mov bl, soma          ; coloca o valor de soma em bl
-    mov ax, 10            
+    xor ah, ah
+    mov al, soma
+    xor bx, bx
+    mov bx, 10
+    xor cx, cx
+    divi:
+    cmp ax, bx
+    inc cx
+    JB escreverr
+    xor dx, dx
+    div bx
+    push dx
+    jmp divi
 
-divi:
-    cmp bx, ax            ; checa se bx <= 10
-    JBE escreverr         ; se sim, pula pra exibir
-    div bx                ; divide ax por bx, resto em dx
-    push dx               ; empilha o resto
-    jmp divi              ; continua dividindo
-
-escreverr:
-    mov dl, bl            ; pega o valor de soma
-    add dl, '0'           ; converte pra ASCII
-    mov ah, 2             
-    int 21H               ; exibe o caractere
-
-    ret                   ; volta pro main
+    escreverr:
+    mov dl, al
+    add dx, 30h
+    mov ah, 2
+    int 21H
+    pop ax
+    loop escreverr
+    ret
 somar ENDP
 end main

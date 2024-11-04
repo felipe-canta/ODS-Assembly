@@ -51,13 +51,16 @@ ler_matriz endp
  
 soma_matriz proc
     xor si, si
-    xor al, al
+    xor bx, bx
+    xor ax, ax
     mov cx, 4
+ 
   somar:
-   add al, matriz[si]
-   add si, 5
+   add al, matriz[si+bx]
+  inc si
+   add bx, 4
    dec cx
-   JNZ somar
+   jnz somar
 
   finalizar:
    mov soma, al

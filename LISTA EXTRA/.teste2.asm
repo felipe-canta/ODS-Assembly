@@ -1,27 +1,90 @@
-IMPRIMIRINICIAL1:
-    XOR BX, BX            ; Inicia na linha 0
-    XOR SI, SI            ; Inicia na coluna 0
-    MOV CX, 400           ; Total de elementos na matriz (20x20)
+.MODEL SMALL
+.STACK 100h
+.DATA
+; Defina uma matriz que represente "BATALHA NAVAL" em formato maior, com caracteres aumentados
+; 1 representa partes preenchidas, 0 representa espaços vazios para formar letras
+TITULO DB 1,1,1,1,1,1,0,1,1,1,1,0,1,0,0,1,1,1,1,0
+       DB 1,0,0,0,0,0,1,0,0,0,0,1,0,1,1,0,0,0,0,1
+       DB 1,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,0
+       DB 1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,0,0,0,1
+       DB 1,0,0,0,0,0,1,0,1,1,1,1,1,0,0,1,1,1,1,0
 
-LOOP_IMPRESSAO:
-    MOV AH, 02h           ; Função de impressão de caractere
-    MOV DL, MATRIZINICIAL[BX][SI] ; Carrega o valor da matriz na posição atual
-    INT 21h               ; Imprime o caractere
+.CODE
+MAIN PROC
+    MOV AX, @DATA
+    MOV DS, AX
+    MOV AX, 13h       ; Modo gráfico 320x200, 256 cores
+    INT 10h
 
-    INC SI                ; Move para a próxima coluna
-    DEC CX                ; Decrementa o contador de elementos
-    CMP CX, 0             ; Verifica se todos os elementos foram impressos
-    JE FIM_IMPRESSAO      ; Se sim, termina a impressão
+    ; Posição inicial de desenho
+    MOV CX, 40        ; Coluna inicial (posição horizontal)
+    MOV DX, 30        ; Linha inicial (posição vertical)
 
-    CMP SI, 20            ; Verifica se chegou ao fim da linha
-    JNE LOOP_IMPRESSAO    ; Se não, continua o loop
+    ; Loop para desenhar o título em pixels grandes
+    MOV SI, OFFSET TITULO
+    MOV BX, 0         ; Para contar o índice na matriz
 
-    ; Ao fim de uma linha, move para a próxima
-    ADD BX, 4             ; Avança para a próxima linha
-    XOR SI, SI            ; Reseta SI para a coluna inicial
-    pulalinha             ; Pula para a linha seguinte
-    JMP LOOP_IMPRESSAO    ; Continua o loop de impressão
+DRAW_LOOP:
+    ; Carrega o próximo valor da matriz TITULO
+    MOV AL, [SI + BX]
+    INC BX            ; Avança para o próximo elemento
+    CMP AL, 0         ; Verifica se é um espaço ou preenchimento
+    JE SKIP_PIXEL     ; Pula se for espaço (0)
 
-FIM_IMPRESSAO:
-    pulalinha
+    ; Função para desenhar um retângulo maior para cada ponto (para aumentar visibilidade)
+    MOV AH, 0Ch       ; Função de desenho de pixel (INT 10h)
+    MOV CX, 4         ; Largura de cada bloco de pixels
+    MOV DX, 4         ; Altura de cada bloco de pixels
+    MOV AL, 15h       ; Cor branca para pontos do título
+
+    ; Desenha o retângulo maior
+    CALL DRAW_RECTANGLE
+
+SKIP_PIXEL:
+    ADD CX, 10        ; Avança para próxima coluna
+    CMP CX, 320       ; Checa o limite da linha
+    JL DRAW_LOOP      ; Se não chegou ao limite, continua
+
+    ; Move para a próxima linha na matriz do título
+    ADD DX, 20
+    MOV CX, 40        ; Reseta a coluna
+    CMP DX, 200       ; Checa o limite da tela
+    JL DRAW_LOOP      ; Se não chegou ao limite, continua
+
+WAIT_KEY:
+    MOV AH, 00h       ; Espera por uma tecla para sair
+    INT 16h
+
+    MOV AX, 3         ; Retorna ao modo de texto
+    INT 10h
+    MOV AH, 4Ch
+    INT 21h
+
+DRAW_RECTANGLE PROC
+    PUSH CX
+    PUSH DX
+
+    MOV BH, 0         ; Página da tela
+    MOV CH, 0         ; Linhas do retângulo
+
+DRAW_ROW:
+    MOV CL, 0         ; Colunas do retângulo
+DRAW_COLUMN:
+    MOV AL, 15h       ; Define a cor do pixel (branco)
+    INT 10h           ; Desenha o pixel
+
+    INC CX            ; Próxima coluna
+    CMP CL, 4
+    JL DRAW_COLUMN    ; Se não desenhou toda a largura, continua
+
+    INC DX            ; Próxima linha
+    CMP CH, 4
+    JL DRAW_ROW       ; Se não desenhou toda a altura, continua
+
+    POP DX
+    POP CX
     RET
+DRAW_RECTANGLE ENDP
+
+MAIN ENDP
+END MAIN

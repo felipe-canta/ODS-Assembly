@@ -80,9 +80,12 @@ definicao2 MACRO
 endm
 .DATA   
 MSG1 DB 'SEJA BEM VINDO AO BATALHA NAVAL$'
-MSG2 DB 'DIGITE QUALQUER NUMERO E DIGITE ENTER PARA INICIAR:$'
+MSG2 DB 'DIGITE UM NUMERO QUALQUER E PRESSIONE ENTER PARA COMECAR:$'
 MSG3 DB 'DIGITE A LINHA: $'
 MSG4 DB 'DIGITE A COLUNA: $'
+msg5 db 10, 13, 'VOCE ACERTOU!!!$'
+msg6 db 10, 13, 'VOCE ERROU :($'
+msg7 db 'PARABENS VOCE DESTRUIU TODOS OS BARCOS E GANHOU!!$'
 
 MATRIZINICIAL DB 20 DUP (20 DUP ("#"))
 MATRIZUSER DB 20 DUP (20 DUP(0))
@@ -323,16 +326,6 @@ MOV AH, 4CH
 INT 21H
 MAIN ENDP
 
-
-
-
-
-
-
-
-
-
-
 TRANSFERENCIADEMATRIZ PROC
 CMP BL, '0'
 JE ZEROMATRIZ
@@ -511,6 +504,8 @@ TRANSFERENCIADEMATRIZ ENDP
 JOGANDO PROC
     XOR CX,CX
 REPETE:
+pulalinha
+pulalinha
 leituralinha:
     XOR BX,BX
     MOV AH,09
@@ -546,6 +541,11 @@ leituracoluna:
 comparajogo: 
     CMP MATRIZUSER[BX][SI],1 ;COMPARA O VALOR DA POSIÇÃO DIGITADA PELO USUARIO COM NOSSA MATRIZ DO PROGRAMA, SE ELA FOR 1, SIGNIFICA QUE ACERTOU A POSIÇÃO DA EMBARCAÇÃO
     JNE ZERO               ;SE NÃO FOR 1, COMEÇA DE NOVO A PEDIR POSIÇÃO
+    mov ah, 9
+    mov dx, offset msg5
+    int 21h
+    pulalinha
+    pulalinha
     INC contador                 ;CX SERÁ USADO COMO NOSSO CONTADOR, POIS TEMOS 13 POSIÇÕES QUE SÃO EMBARCAÇÕES ASSIM QUE ATINGIR TODAS ENCERRA
     MOV MATRIZINICIAL[BX][SI],'X'
     CMP contador, 13
@@ -553,6 +553,11 @@ comparajogo:
     JMP IMPRIMIRINICIAL1
     ZERO:
     MOV MATRIZINICIAL[BX][SI],'O'
+    mov ah, 9
+    mov dx, offset msg6
+    int 21h
+    pulalinha
+    pulalinha
     IMPRIMIRINICIAL1:          ;imprimi a primiera matriz de apresentação do programa
 xor bx, bx
 xor si, si
@@ -564,7 +569,9 @@ INT 21h
 INC SI                    ;AUMENTA O VALOR DA COLUNA
 DEC cX                    ;DIMINUI O CONTADOR
 CMP cX,0                  ;COMPARA COM CX, SE FOR 0 ACABA
-JE repete                   ;SE IGUAL ENCERRA
+JnE somarepete
+jmp REPETE                   ;SE IGUAL ENCERRA
+somarepete:
 CMP SI,20                  ;COMPARA COM 4 PRA VER SE É A HORA DE PULAR LINHA
 JNE PRINT_LOOP             ;SE NÃO VOLTA AO LOOP
 ADD BX,20                  ;SE SIM ADICIONA 4 EM BX, MUDANDO A LINHA DA MATRIZ
@@ -574,6 +581,9 @@ JMP PRINT_LOOP            ;VOLTA NO LOOP
 FIMIMPINICIAL1:
 pulalinha
 FINALIZACAO:
+    mov ah, 9
+    mov dx, offset msg7
+    int 21h
 RET
 JOGANDO ENDP
 

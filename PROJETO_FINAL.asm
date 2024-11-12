@@ -90,6 +90,17 @@ msg7 db 'PARABENS VOCE DESTRUIU TODOS OS BARCOS E GANHOU!!$'
 MATRIZINICIAL DB 20 DUP (20 DUP ("="))
 MATRIZUSER DB 20 DUP (20 DUP(0))
 contador db 0
+ l1 DB ' ____    __   ____   __    __    _   _    __   ', 13, 10
+  DB '(  _ \  /__\ (_  _) /__\  (  )  ( )_( )  /__\  ', 13, 10
+    DB ' ) _ < /(__)\  )(  /(__)\  )(__  ) _ (  /(__)\ ', 13, 10
+  DB '(____/(__)(__)(__)(__)(__)(____)(_) (_)(__)(__)', 13, 10
+DB '$'
+l2 DB ' _  _    __  _  _  __    __   ',  13, 10
+ DB '( \( )  /__\( \/ )/__\  (  )  ',  13, 10
+ DB ' )  (  /(__)\\  //(__)\  )(__ ',  13, 10
+ DB '(_)\_)(__)(__)\/(__)(__)(____)', 13, 10
+ DB '$'
+
 
 ;INICIALIZAREMOS 10 MATRIZES QUE SERAO SELECIONADAS PELO USUARIO DE FORMA ALEATORIO
 MATRIZ0 DB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1
@@ -303,8 +314,9 @@ MATRIZ9 DB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 ; Linha 1
         DB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 ; Linha 20
 .CODE
 MAIN PROC
-MOV AX,@DATA
-MOV DS,AX
+ MOV AX, @DATA       ; Inicializa o segmento de dados
+    MOV DS, AX
+call titulo
 MOV AH,09                 ;IMPRIMI A MENSEGM DE BOAS VINDAS AO JOGO
 LEA DX,MSG1
 INT 21H
@@ -313,18 +325,26 @@ XOR SI,SI                 ;INICIALIZA SI E BX
 XOR BX,BX
 ;COMEÇARA A IMPRIMIR A MATRIZ DE VIZUALIZAÇÃO DO USUARIO
 MOV CX,400                ;CX=400 POIS A MATRIZ TEM 400 CARACTERES (20X20)
-IMPRESSAODAMATRIZ
 pulalinha
 MOV AH,09
 LEA DX,MSG2               ;IMPRIMI A MENSAGEM PARA O USUARIO DIGITAR UM NUMERO, QUE DEFINIRA A MATRIZ QUE O PC UTILIZARA
 INT 21H
 LEITURANUMERO
 pop ax
+IMPRESSAODAMATRIZ
 CALL TRANSFERENCIADEMATRIZ                   ;agora para seleção de qual modelo de matriz sera usado dentre as 10, comparamos BL
 CALL JOGANDO
 MOV AH, 4CH
 INT 21H
 MAIN ENDP
+titulo proc
+mov ah, 9
+lea dx, l1
+int 21h
+lea dx, l2
+int 21h
+RET
+titulo endp
 
 TRANSFERENCIADEMATRIZ PROC
 CMP BL, '0'

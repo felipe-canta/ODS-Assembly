@@ -87,7 +87,7 @@ msg5 db 10, 13, 'VOCE ACERTOU!!!$'
 msg6 db 10, 13, 'VOCE ERROU :($'
 msg7 db 'PARABENS VOCE DESTRUIU TODOS OS BARCOS E GANHOU!!$'
 
-MATRIZINICIAL DB 20 DUP (20 DUP ("#"))
+MATRIZINICIAL DB 20 DUP (20 DUP ("="))
 MATRIZUSER DB 20 DUP (20 DUP(0))
 contador db 0
 
@@ -547,12 +547,12 @@ comparajogo:
     pulalinha
     pulalinha
     INC contador                 ;CX SERÁ USADO COMO NOSSO CONTADOR, POIS TEMOS 13 POSIÇÕES QUE SÃO EMBARCAÇÕES ASSIM QUE ATINGIR TODAS ENCERRA
-    MOV MATRIZINICIAL[BX][SI],'X'
+    MOV MATRIZINICIAL[BX][SI],0dbh
     CMP contador, 13
     JE FINALIZACAO
     JMP IMPRIMIRINICIAL1
     ZERO:
-    MOV MATRIZINICIAL[BX][SI],'O'
+    MOV MATRIZINICIAL[BX][SI],'X'
     mov ah, 9
     mov dx, offset msg6
     int 21h

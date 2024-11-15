@@ -81,15 +81,18 @@ endm
 .DATA   
 MSG1 DB 'SEJA BEM VINDO AO BATALHA NAVAL$'
 MSG2 DB 'DIGITE UM NUMERO QUALQUER E PRESSIONE ENTER PARA COMECAR:$'
-MSG3 DB 'DIGITE A LINHA: $'
-MSG4 DB 'DIGITE A COLUNA: $'
-msg5 db 10, 13, 'VOCE ACERTOU!!!$'
-msg6 db 10, 13, 'VOCE ERROU :($'
+MSG3 DB 'DIGITE A LINHA (0 A 19): $'
+MSG4 DB 'DIGITE A COLUNA (0 A 19): $'
+msg5 db 10, 13, 'VOCE ACERTOU,UM INIMIGO FOI ATINGIDO!!!$'
+msg6 db 10, 13, 'VOCE ERROU, SEU TIRO FOI NA AGUA :($'
 msg7 db 'PARABENS VOCE DESTRUIU TODOS OS BARCOS E GANHOU!!$'
+msg8 db "SEUS TIROS ACABARAM E OS NAVIOS NAO FORAM AFUNDADOS$"
 
 MATRIZINICIAL DB 20 DUP (20 DUP ("="))
 MATRIZUSER DB 20 DUP (20 DUP(0))
 contador db 0
+derrota db 0
+
  l1 DB ' ____    __   ____   __    __    _   _    __   ', 13, 10
   DB '(  _ \  /__\ (_  _) /__\  (  )  ( )_( )  /__\  ', 13, 10
     DB ' ) _ < /(__)\  )(  /(__)\  )(__  ) _ (  /(__)\ ', 13, 10
@@ -99,6 +102,16 @@ l2 DB ' _  _    __  _  _  __    __   ',  13, 10
  DB '( \( )  /__\( \/ )/__\  (  )  ',  13, 10
  DB ' )  (  /(__)\\  //(__)\  )(__ ',  13, 10
  DB '(_)\_)(__)(__)\/(__)(__)(____)', 13, 10
+ DB '$'
+ l3 DB ' ___   ___  ___   ___    __   ____   __  ', 13, 10
+ DB '(   \ (  _)(  ,) (  ,)  /  \ (_  _) (  ) ', 13, 10
+ DB ' ) ) ) ) _) )  \  )  \ ( () )  )(   /__\ ', 13, 10
+ DB '(___/ (___)(_)\_)(_)\_) \__/  (__) (_)(_)', 13, 10
+ DB '$'
+  L4 DB ' _  _  __  ____   __   ___   __   __  ', 13, 10
+ DB '( )( )(  )(_  _) /  \ (  ,) (  ) (  ) ', 13, 10
+ DB ' \\//  )(   )(  ( () ) )  \  )(  /__\ ', 13, 10
+ DB ' (__) (__) (__)  \__/ (_)\_)(__)(_)(_)', 13, 10
  DB '$'
 
 
@@ -314,37 +327,30 @@ MATRIZ9 DB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 ; Linha 1
         DB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 ; Linha 20
 .CODE
 MAIN PROC
- MOV AX, @DATA       ; Inicializa o segmento de dados
-    MOV DS, AX
-call titulo
+MOV AX,@DATA
+MOV DS,AX
 MOV AH,09                 ;IMPRIMI A MENSEGM DE BOAS VINDAS AO JOGO
+lea dx, l1
+int 21h
+lea dx, l2
+int 21h
 LEA DX,MSG1
 INT 21H
 pulalinha
 XOR SI,SI                 ;INICIALIZA SI E BX
 XOR BX,BX
 ;COMEÇARA A IMPRIMIR A MATRIZ DE VIZUALIZAÇÃO DO USUARIO
-MOV CX,400                ;CX=400 POIS A MATRIZ TEM 400 CARACTERES (20X20)
 pulalinha
 MOV AH,09
 LEA DX,MSG2               ;IMPRIMI A MENSAGEM PARA O USUARIO DIGITAR UM NUMERO, QUE DEFINIRA A MATRIZ QUE O PC UTILIZARA
 INT 21H
 LEITURANUMERO
 pop ax
-IMPRESSAODAMATRIZ
 CALL TRANSFERENCIADEMATRIZ                   ;agora para seleção de qual modelo de matriz sera usado dentre as 10, comparamos BL
 CALL JOGANDO
 MOV AH, 4CH
 INT 21H
 MAIN ENDP
-titulo proc
-mov ah, 9
-lea dx, l1
-int 21h
-lea dx, l2
-int 21h
-RET
-titulo endp
 
 TRANSFERENCIADEMATRIZ PROC
 CMP BL, '0'
@@ -561,18 +567,25 @@ leituracoluna:
 comparajogo: 
     CMP MATRIZUSER[BX][SI],1 ;COMPARA O VALOR DA POSIÇÃO DIGITADA PELO USUARIO COM NOSSA MATRIZ DO PROGRAMA, SE ELA FOR 1, SIGNIFICA QUE ACERTOU A POSIÇÃO DA EMBARCAÇÃO
     JNE ZERO               ;SE NÃO FOR 1, COMEÇA DE NOVO A PEDIR POSIÇÃO
+    mov MATRIZUSER[BX][SI],0
     mov ah, 9
     mov dx, offset msg5
     int 21h
     pulalinha
     pulalinha
-    INC contador                 ;CX SERÁ USADO COMO NOSSO CONTADOR, POIS TEMOS 13 POSIÇÕES QUE SÃO EMBARCAÇÕES ASSIM QUE ATINGIR TODAS ENCERRA
+    INC contador    ;INCREMENTA CONTADOR, POIS TEMOS 13 POSIÇÕES QUE SÃO EMBARCAÇÕES ASSIM QUE ATINGIR TODAS ENCERRA
+    INC derrota           ;INCREMENTA derrota que sera usado como delimitador de tentativas
     MOV MATRIZINICIAL[BX][SI],0dbh
     CMP contador, 13
     JE FINALIZACAO
+    CMP derrota, 30
+    JE DERROTADO
     JMP IMPRIMIRINICIAL1
     ZERO:
     MOV MATRIZINICIAL[BX][SI],'X'
+    INC derrota 
+    CMP derrota, 30
+    JE DERROTADO
     mov ah, 9
     mov dx, offset msg6
     int 21h
@@ -600,11 +613,23 @@ pulalinha                 ;MACRO DE PULAR LINHA
 JMP PRINT_LOOP            ;VOLTA NO LOOP
 FIMIMPINICIAL1:
 pulalinha
+DERROTADO:
+    mov ah, 9
+    lea dx, l3
+    int 21h
+    mov dx, offset msg8
+    int 21h
+    
+    JMP TCHAU
 FINALIZACAO:
     mov ah, 9
+     lea dx, l4
+    int 21h
     mov dx, offset msg7
     int 21h
+TCHAU:
 RET
+
 JOGANDO ENDP
 
 END MAIN
